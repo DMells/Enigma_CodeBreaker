@@ -25,9 +25,17 @@ class PlugLead:
 
 
 class Plugboard:
-    def __init__(self):
+    def __init__(self, settings):
         self.unusedplugleads = 10
         self.plugleads = []
+        self.pairs = settings['plugboard_pairs']
+
+        if self.pairs:
+            self.create_plugboard()
+
+    def create_plugboard(self):
+        for i in self.pairs.split(' '):
+            self.add(PlugLead(i))
 
     def add(self, pluglead):
         """
@@ -141,18 +149,10 @@ class individual_rotor:
                     break
 
 
-# class enigma_config():
-#     def __init__(self, board=None):
-
-
-
-
-class Enigma():
-    def __init__(self, settings, plugboard=None):
-        self.plugboard = plugboard
+class Enigma:
+    def __init__(self, settings):
         self.settings = settings
         self.root = None
-        self.board = plugboard
         self.rotor_box = {
             "Housing": {'contacts': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None, 'rotatable': False},
             "Beta": {'contacts': 'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': True},
@@ -170,6 +170,8 @@ class Enigma():
         self.create_machinery()
 
     def create_machinery(self):
+        # Add plugboard
+        self.board = Plugboard(settings)
         # Add housing
         self.add("Housing")
         # Add rotors
@@ -211,8 +213,11 @@ class Enigma():
         while i < len(phrase):
             # New character, therefore reset ptr to root (housing)
             character = phrase[i]
-            if self.board:
-                character = self.board.encode(character)
+            # if self.board:
+            #     character = self.board.encode(character)
+
+            character = self.board.encode(character)
+
             ptr = self.root
             ptr.left.rotate_on_key_press()
 
@@ -254,25 +259,27 @@ class Enigma():
 
 if __name__ == "__main__":
     # You can use this section to write tests and demonstrations of your enigma code.
-    board = Plugboard()
-    board.add(PlugLead("HL"))
-    board.add(PlugLead("MO"))
-    board.add(PlugLead("AJ"))
-    board.add(PlugLead("CX"))
-    board.add(PlugLead("BZ"))
-    board.add(PlugLead("SR"))
-    board.add(PlugLead("NI"))
-    board.add(PlugLead("YW"))
-    board.add(PlugLead("DG"))
-    board.add(PlugLead("PK"))
+    # board = Plugboard()
+    # board.add(PlugLead("HL"))
+    # board.add(PlugLead("MO"))
+    # board.add(PlugLead("AJ"))
+    # board.add(PlugLead("CX"))
+    # board.add(PlugLead("BZ"))
+    # board.add(PlugLead("SR"))
+    # board.add(PlugLead("NI"))
+    # board.add(PlugLead("YW"))
+    # board.add(PlugLead("DG"))
+    # board.add(PlugLead("PK"))
     # print(board.encode(""))
 
     settings = {'rotors': "III II I",
                 'reflector': 'B',
                 'ring_settings': '1 1 1',
-                'initial_positions': 'A A A'}
+                'initial_positions': 'A A A',
+                'plugboard_pairs': 'AB'
+                 }
     e = Enigma(settings)
-    e.encode("AAA")
+    e.encode("A")
 
     # c = enigma_config(board)
     # c.add("Housing")

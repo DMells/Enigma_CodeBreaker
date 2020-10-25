@@ -78,7 +78,7 @@ class individual_rotor:
         self.contacts = rotor_box[name]['contacts']
         self.notch = rotor_box[name]['notch']
         self.rotatable = rotor_box[name]['rotatable']
-        self.ring_setting = ring_setting
+        self.ring_setting = int(ring_setting)
         self.position = position
         self.output_index = None
         self.encoded_char = None
@@ -141,23 +141,45 @@ class individual_rotor:
                     break
 
 
-class enigma_config:
-    def __init__(self, board=None):
+# class enigma_config():
+#     def __init__(self, board=None):
+
+
+
+
+class Enigma():
+    def __init__(self, settings, plugboard=None):
+        self.plugboard = plugboard
+        self.settings = settings
         self.root = None
-        self.board = board
+        self.board = plugboard
         self.rotor_box = {
-         "Housing": {'contacts' :'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None, 'rotatable': False},
-          "Beta": {'contacts':   'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': True},
-          "Gamma": {'contacts':  'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None, 'rotatable': True},
-          "I": {'contacts':      'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'notch': 'Q', 'rotatable': True},
-          "II": {'contacts':     'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'notch': 'E', 'rotatable': True},
-          "III": {'contacts':    'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'notch': 'V', 'rotatable': True},
-          "IV": {'contacts':     'ESOVPZJAYQUIRHXLNFTGKDCMWB', 'notch': 'J', 'rotatable': True},
-          "V": {'contacts':      'VZBRGITYUPSDNHLXAWMJQOFECK', 'notch': 'Z', 'rotatable': True},
-          "A": {'contacts':      'EJMZALYXVBWFCRQUONTSPIKHGD', 'notch': None, 'rotatable': False},
-          "B": {'contacts':      'YRUHQSLDPXNGOKMIEBFZCWVJAT', 'notch': None, 'rotatable': False},
-          "C": {'contacts':      'FVPJIAOYEDRZXWGCTKUQSBNMHL', 'notch': None, 'rotatable': False},
-                          }
+            "Housing": {'contacts': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None, 'rotatable': False},
+            "Beta": {'contacts': 'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': True},
+            "Gamma": {'contacts': 'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None, 'rotatable': True},
+            "I": {'contacts': 'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'notch': 'Q', 'rotatable': True},
+            "II": {'contacts': 'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'notch': 'E', 'rotatable': True},
+            "III": {'contacts': 'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'notch': 'V', 'rotatable': True},
+            "IV": {'contacts': 'ESOVPZJAYQUIRHXLNFTGKDCMWB', 'notch': 'J', 'rotatable': True},
+            "V": {'contacts': 'VZBRGITYUPSDNHLXAWMJQOFECK', 'notch': 'Z', 'rotatable': True},
+            "A": {'contacts': 'EJMZALYXVBWFCRQUONTSPIKHGD', 'notch': None, 'rotatable': False},
+            "B": {'contacts': 'YRUHQSLDPXNGOKMIEBFZCWVJAT', 'notch': None, 'rotatable': False},
+            "C": {'contacts': 'FVPJIAOYEDRZXWGCTKUQSBNMHL', 'notch': None, 'rotatable': False},
+        }
+
+        self.create_machinery()
+
+    def create_machinery(self):
+        # Add housing
+        self.add("Housing")
+        # Add rotors
+        for i in range(len(self.settings['rotors'].split(' '))-1,-1, -1):
+            rotor_name = self.settings['rotors'].split(' ')[i]
+            ring_setting = self.settings['ring_settings'].split(' ')[i]
+            initial_position = self.settings['initial_positions'].split(' ')[i]
+            self.add(rotor_name, ring_setting, initial_position)
+        # Add reflector
+        self.add(settings['reflector'])
 
     def add(self, name, ring_setting=1, initial_position='A'):
         if self.root is None:
@@ -243,15 +265,22 @@ if __name__ == "__main__":
     board.add(PlugLead("YW"))
     board.add(PlugLead("DG"))
     board.add(PlugLead("PK"))
-    print(board.encode(""))
+    # print(board.encode(""))
 
-    c = enigma_config(board)
-    c.add("Housing")
-    c.add("III",ring_setting=1, initial_position='Z')
-    c.add("II",ring_setting=1, initial_position='A')
-    c.add("I", ring_setting=1, initial_position='A')
-    c.add("B")
-    c.encode("HELLOWORLD")
+    settings = {'rotors': "III II I",
+                'reflector': 'B',
+                'ring_settings': '1 1 1',
+                'initial_positions': 'A A A'}
+    e = Enigma(settings)
+    e.encode("AAA")
+
+    # c = enigma_config(board)
+    # c.add("Housing")
+    # c.add("III",ring_setting=1, initial_position='Z')
+    # c.add("II",ring_setting=1, initial_position='A')
+    # c.add("I", ring_setting=1, initial_position='A')
+    # c.add("B")
+    # c.encode("HELLOWORLD")
 
     # DOES NOT WORK - SHOULD GIVE 'V' BUT GIVES 'Y'
     # c = enigma_config()

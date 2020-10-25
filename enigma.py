@@ -194,7 +194,6 @@ class enigma_config:
             ptr = self.root
             ptr.left.rotate_on_key_press()
 
-
             ptr.left.input_index = ptr.contacts.index(character.upper())
             ptr = ptr.left
 

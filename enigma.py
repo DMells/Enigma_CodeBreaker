@@ -3,7 +3,6 @@ class PlugLead:
     def __init__(self, mapping):
 
         self.mapping = mapping
-
         assert len(mapping) == 2, "Must be plugged into two letters"
         assert mapping[0] != mapping[1], "Cannot physically plug two identical letters"
 
@@ -21,6 +20,7 @@ class PlugLead:
         else:
             # Else search for the index of the input character, and return the opposite
             encoded_letter = [self.mapping[1] if self.mapping.index(character)==0 else self.mapping[0]][0]
+        print(f"Plugboard encoding -> {character} is plugged to {encoded_letter}")
         return encoded_letter
 
 
@@ -97,7 +97,7 @@ class individual_rotor:
         self.pins = self.rotate(self.pins, -num_position_rotations)
         self.contacts = self.rotate(self.contacts, -num_position_rotations)
 
-        # Adjust for ring setting (rotates only contact ring) "-1" because ring_setting 1 is default
+        # Adjust for ring setting "-1" because ring_setting 1 is default
         self.contacts = self.rotate(self.contacts, -1 * (self.ring_setting-1))
         self.pins = self.rotate(self.pins, -1 * (self.ring_setting-1))
 
@@ -105,7 +105,7 @@ class individual_rotor:
         self.pins = self.rotate(self.pins, 1)
         self.contacts = self.rotate(self.contacts, 1)
         # Also update next left rotor if notch hit
-        self.turnover_left()
+        self.turnover()
 
     def rotor_encode_left(self, input_index):
         self.output_char = self.contacts[input_index]
@@ -121,9 +121,7 @@ class individual_rotor:
         print(f"Rotor {self.name}, Contact: {self.input_char}, "
               f"Contact is mapped internally to Pin {self.output_char}")
 
-
-
-    def turnover_left(self):
+    def turnover(self):
         if self.position == self.notch:
             print("Turnover triggered")
             nextrotor = self.left
@@ -139,15 +137,18 @@ class individual_rotor:
                         nextrotor.contacts = self.rotate(self.contacts, 2)
 
                     nextrotor = nextrotor.left
+                else:
+                    break
 
 
-class rotor_config:
-    def __init__(self):
+class enigma_config:
+    def __init__(self, board=None):
         self.root = None
+        self.board = board
         self.rotor_box = {
          "Housing": {'contacts' :'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None, 'rotatable': False},
-          "Beta": {'contacts':   'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': False},
-          "Gamma": {'contacts':  'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None, 'rotatable': False},
+          "Beta": {'contacts':   'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': True},
+          "Gamma": {'contacts':  'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None, 'rotatable': True},
           "I": {'contacts':      'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'notch': 'Q', 'rotatable': True},
           "II": {'contacts':     'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'notch': 'E', 'rotatable': True},
           "III": {'contacts':    'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'notch': 'V', 'rotatable': True},
@@ -187,9 +188,12 @@ class rotor_config:
         # For each character in the phrase
         while i < len(phrase):
             # New character, therefore reset ptr to root (housing)
+            character = phrase[i]
+            if self.board:
+                character = self.board.encode(character)
             ptr = self.root
             ptr.left.rotate_on_key_press()
-            character = phrase[i]
+
 
             ptr.left.input_index = ptr.contacts.index(character.upper())
             ptr = ptr.left
@@ -219,6 +223,8 @@ class rotor_config:
                     ptr = ptr.right
                 else:
                     ptr.rotor_encode_right(ptr.left.output_index)
+                    if self.board:
+                        ptr.output_char = self.board.encode(ptr.output_char)
                     encoded_phrase.append(ptr.output_char)
                     break
             i+=1
@@ -227,19 +233,77 @@ class rotor_config:
 
 if __name__ == "__main__":
     # You can use this section to write tests and demonstrations of your enigma code.
-    # board = Plugboard()
-    # board.add(PlugLead("SZ"))
-    # board.add(PlugLead("ER"))
-    # board.add(PlugLead("IO"))
-    # print(board.encode("I"))
+    board = Plugboard()
+    board.add(PlugLead("HL"))
+    board.add(PlugLead("MO"))
+    board.add(PlugLead("AJ"))
+    board.add(PlugLead("CX"))
+    board.add(PlugLead("BZ"))
+    board.add(PlugLead("SR"))
+    board.add(PlugLead("NI"))
+    board.add(PlugLead("YW"))
+    board.add(PlugLead("DG"))
+    board.add(PlugLead("PK"))
+    print(board.encode(""))
 
-    c = rotor_config()
+    c = enigma_config(board)
     c.add("Housing")
-    c.add("III",ring_setting=1, initial_position='V')
-    c.add("II",ring_setting=1, initial_position='E')
-    c.add("I",ring_setting=1, initial_position='Q')
+    c.add("III",ring_setting=1, initial_position='Z')
+    c.add("II",ring_setting=1, initial_position='A')
+    c.add("I", ring_setting=1, initial_position='A')
     c.add("B")
-    c.encode("A")
+    c.encode("HELLOWORLD")
+
+    # DOES NOT WORK - SHOULD GIVE 'V' BUT GIVES 'Y'
+    # c = enigma_config()
+    # c.add("Housing")
+    # c.add("IV",ring_setting=19, initial_position='Z')
+    # c.add("III",ring_setting=15, initial_position='V')
+    # c.add("II",ring_setting=11, initial_position='E')
+    # c.add("I", ring_setting=7, initial_position='Q')
+    # c.add("C")
+    # c.encode("Z")
+
+    # c.add("Housing")
+    # c.add("Beta", ring_setting=24, initial_position='A')
+    # c.add("V", ring_setting=9, initial_position='A')
+    # c.add("IV", ring_setting=14, initial_position='A')
+    # c.add("B")
+    # c.encode("H")
+
+    ################################
+    #ENIGMA DEMONSTRATION EXAMPLE 1
+    ################################
+    # board = Plugboard()
+    # board.add(PlugLead("HL"))
+    # board.add(PlugLead("MO"))
+    # board.add(PlugLead("AJ"))
+    # board.add(PlugLead("CX"))
+    # board.add(PlugLead("BZ"))
+    # board.add(PlugLead("SR"))
+    # board.add(PlugLead("NI"))
+    # board.add(PlugLead("YW"))
+    # board.add(PlugLead("DG"))
+    # board.add(PlugLead("PK"))
+    # print(board.encode(""))
+    #
+    # c = enigma_config(board)
+    # c.add("Housing")
+    # c.add("III", ring_setting=1, initial_position='Z')
+    # c.add("II", ring_setting=1, initial_position='A')
+    # c.add("I", ring_setting=1, initial_position='A')
+    # c.add("B")
+    # c.encode("HELLOWORLD")
+
+    ################################
+    # ENIGMA DEMONSTRATION EXAMPLE 2
+    ################################
+
+
+
+
+
+
     # Assert pluglead.mapping length == 2, "Cannot plug into more than one letter"
     # Assert pluglead.mapping not a double i.e. "EE", "cannot physically connect a letter to itself as there is only one plugboard space per letter"
     # Assert pluglead.mapping doesn't already exist in a different pluglead instance.
@@ -255,4 +319,6 @@ Advanced Ideas
 - user interface ? ("How many leads? input :" "Please type X mappings") etc
 - Multiple inheritance for encode methods? (duplicated but might not be doing same thing)
 - Need to check if rotor has already been taken out of the box and used in the machine
+-- Multiple plugboards? Have an enigma() parent class
+Could add plugboard and housing as part of abstract base class? (will always need to add these)
 """

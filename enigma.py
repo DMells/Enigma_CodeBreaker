@@ -36,6 +36,8 @@ class Rotor:
     def rotate_on_key_press(self):
         self.pins = self.rotate(self.pins, 1)
         self.contacts = self.rotate(self.contacts, 1)
+        self.position = self.pins[0]
+        self.previous_position = self.pins[-1]
         # Also update next left rotor if notch hit
         self.turnover()
 
@@ -53,23 +55,29 @@ class Rotor:
               f"Contact is mapped internally to Pin {self.output_char}")
 
     def turnover(self):
-        if self.position == self.notch:
+        if self.previous_position == self.notch:
             print("Turnover triggered")
             nextrotor = self.left
-            while True:
+            nextrotor.previous_position = nextrotor.pins[-1]
+            nextnextrotor = nextrotor.left
+            # while True:
                 # If there is a nextrotor
-                if nextrotor is not None:
-                    if nextrotor.position != nextrotor.notch:
-                        nextrotor.pins = self.rotate(self.pins, 1)
-                        nextrotor.contacts = self.rotate(self.contacts, 1)
-                    else:
-                        # double-step
-                        nextrotor.pins = self.rotate(self.pins, 2)
-                        nextrotor.contacts = self.rotate(self.contacts, 2)
-
-                    nextrotor = nextrotor.left
+            if nextrotor is not None:
+                if nextrotor.position != nextrotor.notch:
+                    nextrotor.pins = self.rotate(nextrotor.pins, 1)
+                    nextrotor.contacts = self.rotate(nextrotor.contacts, 1)
+                    nextrotor.position = nextrotor.pins[0]
                 else:
-                    break
+                    # double-step
+                    nextrotor.pins = self.rotate(nextrotor.pins, 2)
+                    nextrotor.contacts = self.rotate(nextrotor.contacts, 2)
+                    nextrotor.position = nextrotor.pins[0]
+
+                    nextnextrotor.pins = self.rotate(nextnextrotor.pins, 1)
+                    nextnextrotor.contacts = self.rotate(nextnextrotor.contacts, 1)
+                    nextnextrotor.position = nextnextrotor.pins[0]
+                # nextrotor = nextrotor.left
+
 
 
 class Enigma:
@@ -188,10 +196,10 @@ if __name__ == "__main__":
                 'reflector': 'B',
                 'ring_settings': '1 1 1',
                 'initial_positions': 'A A A',
-                'plugboard_pairs': 'AB'
+                'plugboard_pairs': None
                  }
     e = Enigma(settings)
-    e.encode("DPWDWZUQP")
+    e.encode("AAAAAAAAAAAAAAAAAAAAAAAAAA")
 
     # c = enigma_config(board)
     # c.add("Housing")

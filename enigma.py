@@ -1,83 +1,7 @@
-
-class PlugLead:
-    def __init__(self, mapping):
-
-        self.mapping = mapping
-        assert len(mapping) == 2, "Must be plugged into two letters"
-        assert mapping[0] != mapping[1], "Cannot physically plug two identical letters"
-
-    def encode(self, character):
-        """
-        Convert input character to it's associated encoded character via the plugboard
-        input character : the character we want to encode
-
-        return encoded_letter : the alternate letter
-        """
-
-        # If character not part of this particular leads mapping, encode the letter to itself
-        if character not in self.mapping:
-            encoded_letter = character
-        else:
-            # Else search for the index of the input character, and return the opposite
-            encoded_letter = [self.mapping[1] if self.mapping.index(character)==0 else self.mapping[0]][0]
-        print(f"Plugboard encoding -> {character} is plugged to {encoded_letter}")
-        return encoded_letter
+from plugboard import Plugboard
 
 
-class Plugboard:
-    def __init__(self, settings):
-        self.unusedplugleads = 10
-        self.plugleads = []
-        self.pairs = settings['plugboard_pairs']
-
-        if self.pairs:
-            self.create_plugboard()
-
-    def create_plugboard(self):
-        for i in self.pairs.split(' '):
-            self.add(PlugLead(i))
-
-    def add(self, pluglead):
-        """
-        Add instance of PlugLead to the PlugBoard (via plugleads list)
-        1. Checks first if there are any unused plugleads
-        2. Checks if any of the letters in the input string are already contained within
-        another instance of PlugLead - if so returns ValueError
-        3. Adds instance to plugleads list
-        4. Reduces unusedplugleads by 1
-        """
-        if self.unusedplugleads > 0:
-            if any(letter in pluglead.mapping for usedlead in self.plugleads for letter in usedlead.mapping):
-                raise ValueError("Letter already used in another lead")
-
-            self.plugleads.append(pluglead)
-            self.unusedplugleads-=1
-        else:
-            raise ValueError("Lead creation exceeds max number of leads")
-
-    def encode(self, character):
-        """
-        For the input character, loop through all instances of plugleads and find which one contains that character
-        Return encoded character
-        """
-
-        # If no plugleads used, return original character
-        if len(self.plugleads) == 0:
-            return character
-        else:
-            encoded_char = character
-            for lead in self.plugleads:
-                # If the character exists in the mapping
-                if character in lead.mapping:
-                    # Encode the character
-                    encoded_char = lead.encode(character)
-                # Otherwise check the next pluglead
-                else:
-                    next
-            return encoded_char
-
-
-class individual_rotor:
+class Rotor:
     def __init__(self,name, rotor_box, ring_setting, position, left=None, right=None):
         self.name = name
         self.left = left
@@ -125,7 +49,6 @@ class individual_rotor:
         self.input_char = self.pins[input_index]
         self.output_index = self.contacts.index(self.input_char)
         self.output_char = self.pins[self.output_index]
-        # self.output_index = self.contacts.index(self.output_char)
         print(f"Rotor {self.name}, Contact: {self.input_char}, "
               f"Contact is mapped internally to Pin {self.output_char}")
 
@@ -171,7 +94,7 @@ class Enigma:
 
     def create_machinery(self):
         # Add plugboard
-        self.board = Plugboard(settings)
+        self.board = Plugboard(self.settings)
         # Add housing
         self.add("Housing")
         # Add rotors
@@ -181,40 +104,29 @@ class Enigma:
             initial_position = self.settings['initial_positions'].split(' ')[i]
             self.add(rotor_name, ring_setting, initial_position)
         # Add reflector
-        self.add(settings['reflector'])
+        self.add(self.settings['reflector'])
 
     def add(self, name, ring_setting=1, initial_position='A'):
         if self.root is None:
-            self.root = individual_rotor(name, self.rotor_box, ring_setting, initial_position)
+            self.root = Rotor(name, self.rotor_box, ring_setting, initial_position)
             self.root.adjust_starting_positions()
         else:
             ptr = self.root
             while True:
                 if ptr.left is None:
-                    ptr.left = individual_rotor(name, self.rotor_box, ring_setting, initial_position, right=ptr)
+                    ptr.left = Rotor(name, self.rotor_box, ring_setting, initial_position, right=ptr)
                     ptr.left.adjust_starting_positions()
                     break
                 else:
                     ptr = ptr.left
 
     def encode(self, phrase):
-        """
-        If input 'A'
-        1. Rotate first rotor one position - do we actually alter the list itself or just maintain a counter? Probably a counter, but will have to track when it
-        reaches 26 to make sure it gets reset
-
-        """
-        print("Begin encode")
         i=0
-
         encoded_phrase = []
-
         # For each character in the phrase
         while i < len(phrase):
             # New character, therefore reset ptr to root (housing)
             character = phrase[i]
-            # if self.board:
-            #     character = self.board.encode(character)
 
             character = self.board.encode(character)
 
@@ -230,7 +142,6 @@ class Enigma:
                     if ptr.right.name == 'Housing':
                     # If we are at the first rotor
                         ptr.rotor_encode_left(ptr.input_index)
-
                     else:
                         # Else if there is a rotor to the right, grab that rotors encoded character
                         ptr.rotor_encode_left(ptr.right.output_index)
@@ -243,7 +154,6 @@ class Enigma:
             ptr = ptr.right
             while True:
                 if ptr.right:
-                    # if ptr.left.name in ['A','B','C']:
                     # If we are at the first rotor
                     ptr.rotor_encode_right(ptr.left.output_index)
                     ptr = ptr.right
@@ -254,7 +164,9 @@ class Enigma:
                     encoded_phrase.append(ptr.output_char)
                     break
             i+=1
-            print(encoded_phrase)
+        print(f"Input Phrase: {phrase}")
+        print(f"Encoded Phrase: {''.join(encoded_phrase)}")
+        return ''.join(encoded_phrase)
 
 
 if __name__ == "__main__":
@@ -279,7 +191,7 @@ if __name__ == "__main__":
                 'plugboard_pairs': 'AB'
                  }
     e = Enigma(settings)
-    e.encode("A")
+    e.encode("DPWDWZUQP")
 
     # c = enigma_config(board)
     # c.add("Housing")
@@ -344,6 +256,9 @@ if __name__ == "__main__":
     # Assert pluglead.mapping doesn't already exist in a different pluglead instance.
 
 # Notes
+"""
+Check that the ord(A) - ord(blah) works for long sentences, might fall over 
+"""
 """
 Advanced Ideas
 - Removing limitation of being able to crack the code by allowing plugboard letter able to plug into itself (this was how Turing cracked the code)

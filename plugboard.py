@@ -19,7 +19,7 @@ class PlugLead:
         else:
             # Else search for the index of the input character, and return the opposite
             encoded_letter = [self.mapping[1] if self.mapping.index(character)==0 else self.mapping[0]][0]
-        print(f"Plugboard encoding -> {character} is plugged to {encoded_letter}")
+        # print(f"Plugboard encoding -> {character} is plugged to {encoded_letter}")
         return encoded_letter
 
 

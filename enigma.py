@@ -9,7 +9,6 @@ class Rotor:
         self.pins = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         self.contacts = rotor_box[name]['contacts']
         self.notch = rotor_box[name]['notch']
-        self.rotatable = rotor_box[name]['rotatable']
         self.ring_setting = int(ring_setting)
         self.position = position
         self.output_index = None
@@ -17,42 +16,41 @@ class Rotor:
         self.input_index = None
 
     def rotate(self, l, x):
-        if self.rotatable:
-            return l[x:] + l[:x]
-        else:
-            return l
+        return l[x:] + l[:x]
 
     def adjust_starting_positions(self):
         # Adjust for starting position (rotates both pin and contact rings)
-        print(f"Adjusting starting positions for {self.name}")
-        num_position_rotations = ord('A') - ord(self.position)
-        self.pins = self.rotate(self.pins, -num_position_rotations)
-        self.contacts = self.rotate(self.contacts, -num_position_rotations)
+        if self.notch:
+            print(f"Adjusting starting positions for {self.name}")
+            num_position_rotations = ord('A') - ord(self.position)
+            self.pins = self.rotate(self.pins, -num_position_rotations)
+            self.contacts = self.rotate(self.contacts, -num_position_rotations)
 
-        # Adjust for ring setting "-1" because ring_setting 1 is default
-        self.contacts = self.rotate(self.contacts, -1 * (self.ring_setting-1))
-        self.pins = self.rotate(self.pins, -1 * (self.ring_setting-1))
+            # Adjust for ring setting "-1" because ring_setting 1 is default
+            self.contacts = self.rotate(self.contacts, -1 * (self.ring_setting-1))
+            self.pins = self.rotate(self.pins, -1 * (self.ring_setting-1))
 
     def rotate_on_key_press(self):
-        self.pins = self.rotate(self.pins, 1)
-        self.contacts = self.rotate(self.contacts, 1)
-        self.position = self.pins[0]
-        self.previous_position = self.pins[-1]
-        # Also update next left rotor if notch hit
-        self.turnover()
+        if self.notch:
+            self.pins = self.rotate(self.pins, 1)
+            self.contacts = self.rotate(self.contacts, 1)
+            self.position = self.pins[0]
+            self.previous_position = self.pins[-1]
+            # Also update next left rotor if notch hit
+            self.turnover()
 
     def rotor_encode_left(self, input_index):
         self.output_char = self.contacts[input_index]
         self.output_index = self.pins.index(self.output_char)
-        print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
-              f"Pin is mapped internally to Contact {self.output_char}")
+        # print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
+        #       f"Pin is mapped internally to Contact {self.output_char}")
 
     def rotor_encode_right(self, input_index):
         self.input_char = self.pins[input_index]
         self.output_index = self.contacts.index(self.input_char)
         self.output_char = self.pins[self.output_index]
-        print(f"Rotor {self.name}, Contact: {self.input_char}, "
-              f"Contact is mapped internally to Pin {self.output_char}")
+        # print(f"Rotor {self.name}, Contact: {self.input_char}, "
+        #       f"Contact is mapped internally to Pin {self.output_char}")
 
     def turnover(self):
         if self.previous_position == self.notch:
@@ -63,19 +61,21 @@ class Rotor:
             # while True:
                 # If there is a nextrotor
             if nextrotor is not None:
-                if nextrotor.position != nextrotor.notch:
-                    nextrotor.pins = self.rotate(nextrotor.pins, 1)
-                    nextrotor.contacts = self.rotate(nextrotor.contacts, 1)
-                    nextrotor.position = nextrotor.pins[0]
-                else:
-                    # double-step
-                    nextrotor.pins = self.rotate(nextrotor.pins, 2)
-                    nextrotor.contacts = self.rotate(nextrotor.contacts, 2)
-                    nextrotor.position = nextrotor.pins[0]
+                if nextrotor.notch:
+                    if nextrotor.position != nextrotor.notch:
+                        nextrotor.pins = self.rotate(nextrotor.pins, 1)
+                        nextrotor.contacts = self.rotate(nextrotor.contacts, 1)
+                        nextrotor.position = nextrotor.pins[0]
+                    else:
+                        print("Double Step")
+                        # double-step
+                        nextrotor.pins = self.rotate(nextrotor.pins, 1)
+                        nextrotor.contacts = self.rotate(nextrotor.contacts, 1)
+                        nextrotor.position = nextrotor.pins[0]
 
-                    nextnextrotor.pins = self.rotate(nextnextrotor.pins, 1)
-                    nextnextrotor.contacts = self.rotate(nextnextrotor.contacts, 1)
-                    nextnextrotor.position = nextnextrotor.pins[0]
+                        nextnextrotor.pins = self.rotate(nextnextrotor.pins, 1)
+                        nextnextrotor.contacts = self.rotate(nextnextrotor.contacts, 1)
+                        nextnextrotor.position = nextnextrotor.pins[0]
                 # nextrotor = nextrotor.left
 
 
@@ -85,17 +85,17 @@ class Enigma:
         self.settings = settings
         self.root = None
         self.rotor_box = {
-            "Housing": {'contacts': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None, 'rotatable': False},
-            "Beta": {'contacts': 'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None, 'rotatable': True},
-            "Gamma": {'contacts': 'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None, 'rotatable': True},
-            "I": {'contacts': 'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'notch': 'Q', 'rotatable': True},
-            "II": {'contacts': 'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'notch': 'E', 'rotatable': True},
-            "III": {'contacts': 'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'notch': 'V', 'rotatable': True},
-            "IV": {'contacts': 'ESOVPZJAYQUIRHXLNFTGKDCMWB', 'notch': 'J', 'rotatable': True},
-            "V": {'contacts': 'VZBRGITYUPSDNHLXAWMJQOFECK', 'notch': 'Z', 'rotatable': True},
-            "A": {'contacts': 'EJMZALYXVBWFCRQUONTSPIKHGD', 'notch': None, 'rotatable': False},
-            "B": {'contacts': 'YRUHQSLDPXNGOKMIEBFZCWVJAT', 'notch': None, 'rotatable': False},
-            "C": {'contacts': 'FVPJIAOYEDRZXWGCTKUQSBNMHL', 'notch': None, 'rotatable': False},
+            "Housing": {'contacts': 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'notch': None},
+            "Beta": {'contacts': 'LEYJVCNIXWPBQMDRTAKZGFUHOS', 'notch': None},
+            "Gamma": {'contacts': 'FSOKANUERHMBTIYCWLQPZXVGJD', 'notch': None},
+            "I": {'contacts': 'EKMFLGDQVZNTOWYHXUSPAIBRCJ', 'notch': 'Q'},
+            "II": {'contacts': 'AJDKSIRUXBLHWTMCQGZNPYFVOE', 'notch': 'E'},
+            "III": {'contacts': 'BDFHJLCPRTXVZNYEIWGAKMUSQO', 'notch': 'V'},
+            "IV": {'contacts': 'ESOVPZJAYQUIRHXLNFTGKDCMWB', 'notch': 'J'},
+            "V": {'contacts': 'VZBRGITYUPSDNHLXAWMJQOFECK', 'notch': 'Z'},
+            "A": {'contacts': 'EJMZALYXVBWFCRQUONTSPIKHGD', 'notch': None},
+            "B": {'contacts': 'YRUHQSLDPXNGOKMIEBFZCWVJAT', 'notch': None},
+            "C": {'contacts': 'FVPJIAOYEDRZXWGCTKUQSBNMHL', 'notch': None},
         }
 
         self.create_machinery()
@@ -158,7 +158,7 @@ class Enigma:
                     # No more rotors, now reflector
                     ptr.rotor_encode_left(ptr.right.output_index)
                     break
-            print("Reflector hit")
+            # print("Reflector hit")
             ptr = ptr.right
             while True:
                 if ptr.right:
@@ -179,27 +179,62 @@ class Enigma:
 
 if __name__ == "__main__":
     # You can use this section to write tests and demonstrations of your enigma code.
-    # board = Plugboard()
-    # board.add(PlugLead("HL"))
-    # board.add(PlugLead("MO"))
-    # board.add(PlugLead("AJ"))
-    # board.add(PlugLead("CX"))
-    # board.add(PlugLead("BZ"))
-    # board.add(PlugLead("SR"))
-    # board.add(PlugLead("NI"))
-    # board.add(PlugLead("YW"))
-    # board.add(PlugLead("DG"))
-    # board.add(PlugLead("PK"))
-    # print(board.encode(""))
-
-    settings = {'rotors': "III II I",
+    # MULTIPLE ROTOR DEMONSTRATION
+    # 1 A -> U
+    # 2 A -> B
+    # 3 A -> L = means double step is correct
+    # 4 Incorrect H gives M - should be Y - means ring settings are off OR the non-notch on Beta isnt working
+    settings = {'rotors': "IV V Beta",
                 'reflector': 'B',
-                'ring_settings': '1 1 1',
+                'ring_settings': '14 9 24',
                 'initial_positions': 'A A A',
-                'plugboard_pairs': None
-                 }
+                'plugboard_pairs': None}
     e = Enigma(settings)
-    e.encode("AAAAAAAAAAAAAAAAAAAAAAAAAA")
+    e.encode('H')
+    # settings = {'rotors': "I II III IV",
+    #             'reflector': 'B',
+    #             'ring_settings': '14 9 24',
+    #             'initial_positions': 'A A A',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('H')
+
+    #######################
+    ##### EXAMPLE 1 #######
+    #######################
+    # settings = {'rotors': "I II III",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'A A Z',
+    #             'plugboard_pairs': 'HL MO AJ CX BZ SR NI YW DG PK'}
+    # e = Enigma(settings)
+    # e.encode('HELLOWORLD')
+
+    #######################
+    ##### EXAMPLE 2 #######
+    #######################
+    # settings = {'rotors': "IV V Beta I",
+    #             'reflector': 'A',
+    #             'ring_settings': '18 24 3 5',
+    #             'initial_positions': 'E Z G P',
+    #             'plugboard_pairs': 'PC XZ FM QA ST NB HY OR EV IU'}
+    # e = Enigma(settings)
+    # e.encode('BUPXWJCDPFASXBDHLBBIBSRNWCSZXQOLBNXYAXVHOGCUUIBCVMPUZYUUKHI')
+
+
+
+
+
+    # settings = {'rotors': "III II I",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'A A A',
+    #             'plugboard_pairs': None
+    #              }
+    # e = Enigma(settings)
+    # e.encode("AAAAAAAAAAAAAAAAAAAAAAAAAA")
+
+
 
     # c = enigma_config(board)
     # c.add("Housing")

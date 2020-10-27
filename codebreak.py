@@ -60,30 +60,30 @@ class CodeBreaker:
 
 if __name__ == '__main__':
     # CODE 1
-    settings = {'code':'DMEXBMKYCVPNQBEDHXVPZGKMTFFBJRPJTLHLCHOTKOYXGGHZ',
-                'crib': 'SECRETS',
-                'rotors': 'Beta Gamma V',
-                'reflector': 'UNKNOWN',
-                'ring_settings': '04 02 14',
-                'initial_positions':'M J M',
-                'plugboard_pairs': 'KI XN FL'}
-    e = CodeBreaker(settings)
-    e.codebreak_reflector()
+    # settings = {'code':'DMEXBMKYCVPNQBEDHXVPZGKMTFFBJRPJTLHLCHOTKOYXGGHZ',
+    #             'crib': 'SECRETS',
+    #             'rotors': 'Beta Gamma V',
+    #             'reflector': 'UNKNOWN',
+    #             'ring_settings': '04 02 14',
+    #             'initial_positions':'M J M',
+    #             'plugboard_pairs': 'KI XN FL'}
+    # e = CodeBreaker(settings)
+    # e.codebreak_reflector()
 
     # CODE 2
 
     # CODE 3
 
     # CODE 4
-    # settings = {'code': 'SDNTVTPHRBNWTLMZTQKZGADDQYPFNHBPNHCQGBGMZPZLUAVGDQVYRBFYYEIXQWVTHXGNW',
-    #             'crib':'TUTOR',
-    #             'rotors':'V III IV',
-    #             'reflector':'A',
-    #             'ring_settings':'24 12 10',
-    #             'initial_positions':'S W U',
-    #             'plugboard_pairs': 'WP RJ A? VF I? HN CG BS'}
-    # e = CodeBreaker(settings)
-    # e.codebreak_plugleads()
+    settings = {'code': 'SDNTVTPHRBNWTLMZTQKZGADDQYPFNHBPNHCQGBGMZPZLUAVGDQVYRBFYYEIXQWVTHXGNW',
+                'crib':'TUTOR',
+                'rotors':'V III IV',
+                'reflector':'A',
+                'ring_settings':'24 12 10',
+                'initial_positions':'S W U',
+                'plugboard_pairs': 'WP RJ A? VF I? HN CG BS'}
+    e = CodeBreaker(settings)
+    e.codebreak_plugleads()
 
 """
 Could run through each, build where possible, and where not possible (try except?) initiate a near-duplicate

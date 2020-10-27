@@ -1,11 +1,12 @@
 from plugboard import Plugboard
-
+import string
 
 class Rotor:
-    def __init__(self,name, rotor_box, ring_setting, position, left=None, right=None):
+    def __init__(self,name, rotor_box, ring_setting, position, rotor_num, left=None, right=None):
         self.name = name
         self.left = left
         self.right = right
+        self.rotor_num = rotor_num
         self.pins = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         self.contacts = rotor_box[name]['contacts']
         self.notch = rotor_box[name]['notch']
@@ -20,15 +21,51 @@ class Rotor:
 
     def adjust_starting_positions(self):
         # Adjust for starting position (rotates both pin and contact rings)
-        if self.notch:
+        if self.name not in ['A','B','C']:
             print(f"Adjusting starting positions for {self.name}")
-            num_position_rotations = ord('A') - ord(self.position)
-            self.pins = self.rotate(self.pins, -num_position_rotations)
-            self.contacts = self.rotate(self.contacts, -num_position_rotations)
-
+            # d = dict(enumerate(string.ascii_uppercase, 0))
+            # d[(string.ascii_uppercase.index(pin) + offset) % 26]
+            # num_position_rotations = (ord('A') - ord(self.position))%26
+            num_position_rotations = (string.ascii_uppercase.index('A') + string.ascii_uppercase.index(self.position)) % 26
+            # print(f'Position required : {self.position}')
+            # print(f'Position rotations : {num_position_rotations}')
             # Adjust for ring setting "-1" because ring_setting 1 is default
-            self.contacts = self.rotate(self.contacts, -1 * (self.ring_setting-1))
-            self.pins = self.rotate(self.pins, -1 * (self.ring_setting-1))
+            # self.contacts = self.rotate(self.contacts, -1 * (self.ring_setting - 1))
+            # self.pins = self.rotate(self.pins, -1 * (self.ring_setting - 1))
+
+            # self.pins = self.rotate(self.pins, -num_position_rotations)
+            # self.contacts = self.rotate(self.contacts, -num_position_rotations)
+            # self.contacts = self.rotate(self.contacts, (num_position_rotations - (self.ring_setting-1))%26)
+            # self.pins = self.rotate(self.pins, (num_position_rotations - (self.ring_setting)-1)%26)
+
+            self.pins = self.rotate(self.pins, num_position_rotations)
+            self.contacts = self.rotate(self.contacts, num_position_rotations)
+
+            # print(f'Start pos for {self.name} :')
+            # print(f'Pins     : {self.pins}')
+            # print(f'Contacts : {self.contacts}')
+            # #
+            # print('Done')
+
+    def adjust_ring_setting(self):
+        # Get initial offsets
+        self.offsets = []
+        import string
+        for (pin, contact) in zip(self.pins, self.contacts):
+            # self.offsets.append((ord(contact) - ord(pin))%26)
+            self.offsets.append(string.ascii_uppercase.index(contact) - string.ascii_uppercase.index(pin))
+
+        self.offsets = self.rotate(self.offsets, -1 * (self.ring_setting-1))
+        self.old_contacts = self.contacts
+        self.contacts = []
+        # for i, (pin, offset) in enumerate(zip(self.pins, self.offsets)):
+        #     self.new_contacts.append(chr((ord(pin) + offset%26)))
+        # for i, (pin, offset) in enumerate(zip(self.pins, self.offsets)):
+        #     self.new_contacts.append(chr((string.ascii_uppercase.index(pin) + offset%26)))
+        d = dict(enumerate(string.ascii_uppercase, 0))
+        for i, (pin, offset) in enumerate(zip(self.pins, self.offsets)):
+            self.contacts.append(d[(string.ascii_uppercase.index(pin)+offset)%26])
+        self.contacts = ''.join(self.contacts)
 
     def rotate_on_key_press(self):
         if self.notch:
@@ -36,21 +73,33 @@ class Rotor:
             self.contacts = self.rotate(self.contacts, 1)
             self.position = self.pins[0]
             self.previous_position = self.pins[-1]
+        if self.left.position == self.left.notch:
+            self.left.pins = self.rotate(self.left.pins, 1)
+            self.left.contacts = self.rotate(self.left.contacts, 1)
+            self.left.position = self.left.pins[0]
+            self.left.previous_position = self.left.pins[-1]
+
+            self.left.left.pins = self.rotate(self.left.left.pins, 1)
+            self.left.left.contacts = self.rotate(self.left.left.contacts, 1)
+            self.left.left.position = self.left.left.pins[0]
+            self.left.left.previous_position = self.left.left.pins[-1]
+
+        # if self.notch:
             # Also update next left rotor if notch hit
-            self.turnover()
+            # self.turnover()
 
     def rotor_encode_left(self, input_index):
         self.output_char = self.contacts[input_index]
         self.output_index = self.pins.index(self.output_char)
-        # print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
-        #       f"Pin is mapped internally to Contact {self.output_char}")
+        print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
+              f"Pin is mapped internally to Contact {self.output_char}")
 
     def rotor_encode_right(self, input_index):
         self.input_char = self.pins[input_index]
         self.output_index = self.contacts.index(self.input_char)
         self.output_char = self.pins[self.output_index]
-        # print(f"Rotor {self.name}, Contact: {self.input_char}, "
-        #       f"Contact is mapped internally to Pin {self.output_char}")
+        print(f"Rotor {self.name}, Contact: {self.input_char}, "
+              f"Contact is mapped internally to Pin {self.output_char}")
 
     def turnover(self):
         if self.previous_position == self.notch:
@@ -107,22 +156,27 @@ class Enigma:
         self.add("Housing")
         # Add rotors
         for i in range(len(self.settings['rotors'].split(' '))-1,-1, -1):
+            rotor_num = 1
             rotor_name = self.settings['rotors'].split(' ')[i]
             ring_setting = self.settings['ring_settings'].split(' ')[i]
             initial_position = self.settings['initial_positions'].split(' ')[i]
-            self.add(rotor_name, ring_setting, initial_position)
+            self.add(rotor_name,rotor_num, ring_setting, initial_position)
+            rotor_num +=1
         # Add reflector
         self.add(self.settings['reflector'])
 
-    def add(self, name, ring_setting=1, initial_position='A'):
+    def add(self, name, rotor_num=None, ring_setting=1, initial_position='A'):
         if self.root is None:
-            self.root = Rotor(name, self.rotor_box, ring_setting, initial_position)
+            self.root = Rotor(name, self.rotor_box, ring_setting, initial_position, rotor_num)
+            self.root.adjust_ring_setting()
             self.root.adjust_starting_positions()
         else:
             ptr = self.root
             while True:
                 if ptr.left is None:
-                    ptr.left = Rotor(name, self.rotor_box, ring_setting, initial_position, right=ptr)
+
+                    ptr.left = Rotor(name, self.rotor_box, ring_setting, initial_position, rotor_num, right=ptr)
+                    ptr.left.adjust_ring_setting()
                     ptr.left.adjust_starting_positions()
                     break
                 else:
@@ -181,24 +235,54 @@ if __name__ == "__main__":
     # You can use this section to write tests and demonstrations of your enigma code.
     # MULTIPLE ROTOR DEMONSTRATION
     # 1 A -> U
+    # settings = {'rotors': "I II III",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'A A Z',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('A')
     # 2 A -> B
+    # settings = {'rotors': "I II III",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'A A A',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('A')
     # 3 A -> L = means double step is correct
+    # settings = {'rotors': "I II III",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'Q E V',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('A')
     # 4 Incorrect H gives M - should be Y - means ring settings are off OR the non-notch on Beta isnt working
-    settings = {'rotors': "IV V Beta",
-                'reflector': 'B',
-                'ring_settings': '14 9 24',
-                'initial_positions': 'A A A',
-                'plugboard_pairs': None}
-    e = Enigma(settings)
-    e.encode('H')
-    # settings = {'rotors': "I II III IV",
+    # settings = {'rotors': "IV V Beta",
     #             'reflector': 'B',
     #             'ring_settings': '14 9 24',
     #             'initial_positions': 'A A A',
     #             'plugboard_pairs': None}
     # e = Enigma(settings)
     # e.encode('H')
+    # 5 Z -> V - CORRECT
+    # settings = {'rotors': "I II III IV",
+    #             'reflector': 'C',
+    #             'ring_settings': '7 11 15 19',
+    #             'initial_positions': 'Q E V Z',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('Z')
 
+
+    # settings = {'rotors': "III II I",
+    #             'reflector': 'B',
+    #             'ring_settings': '1 1 1',
+    #             'initial_positions': 'A E A',
+    #             'plugboard_pairs': None}
+    # e = Enigma(settings)
+    # e.encode('A')
     #######################
     ##### EXAMPLE 1 #######
     #######################
@@ -213,82 +297,13 @@ if __name__ == "__main__":
     #######################
     ##### EXAMPLE 2 #######
     #######################
-    # settings = {'rotors': "IV V Beta I",
-    #             'reflector': 'A',
-    #             'ring_settings': '18 24 3 5',
-    #             'initial_positions': 'E Z G P',
-    #             'plugboard_pairs': 'PC XZ FM QA ST NB HY OR EV IU'}
-    # e = Enigma(settings)
-    # e.encode('BUPXWJCDPFASXBDHLBBIBSRNWCSZXQOLBNXYAXVHOGCUUIBCVMPUZYUUKHI')
-
-
-
-
-
-    # settings = {'rotors': "III II I",
-    #             'reflector': 'B',
-    #             'ring_settings': '1 1 1',
-    #             'initial_positions': 'A A A',
-    #             'plugboard_pairs': None
-    #              }
-    # e = Enigma(settings)
-    # e.encode("AAAAAAAAAAAAAAAAAAAAAAAAAA")
-
-
-
-    # c = enigma_config(board)
-    # c.add("Housing")
-    # c.add("III",ring_setting=1, initial_position='Z')
-    # c.add("II",ring_setting=1, initial_position='A')
-    # c.add("I", ring_setting=1, initial_position='A')
-    # c.add("B")
-    # c.encode("HELLOWORLD")
-
-    # DOES NOT WORK - SHOULD GIVE 'V' BUT GIVES 'Y'
-    # c = enigma_config()
-    # c.add("Housing")
-    # c.add("IV",ring_setting=19, initial_position='Z')
-    # c.add("III",ring_setting=15, initial_position='V')
-    # c.add("II",ring_setting=11, initial_position='E')
-    # c.add("I", ring_setting=7, initial_position='Q')
-    # c.add("C")
-    # c.encode("Z")
-
-    # c.add("Housing")
-    # c.add("Beta", ring_setting=24, initial_position='A')
-    # c.add("V", ring_setting=9, initial_position='A')
-    # c.add("IV", ring_setting=14, initial_position='A')
-    # c.add("B")
-    # c.encode("H")
-
-    ################################
-    #ENIGMA DEMONSTRATION EXAMPLE 1
-    ################################
-    # board = Plugboard()
-    # board.add(PlugLead("HL"))
-    # board.add(PlugLead("MO"))
-    # board.add(PlugLead("AJ"))
-    # board.add(PlugLead("CX"))
-    # board.add(PlugLead("BZ"))
-    # board.add(PlugLead("SR"))
-    # board.add(PlugLead("NI"))
-    # board.add(PlugLead("YW"))
-    # board.add(PlugLead("DG"))
-    # board.add(PlugLead("PK"))
-    # print(board.encode(""))
-    #
-    # c = enigma_config(board)
-    # c.add("Housing")
-    # c.add("III", ring_setting=1, initial_position='Z')
-    # c.add("II", ring_setting=1, initial_position='A')
-    # c.add("I", ring_setting=1, initial_position='A')
-    # c.add("B")
-    # c.encode("HELLOWORLD")
-
-    ################################
-    # ENIGMA DEMONSTRATION EXAMPLE 2
-    ################################
-
+    settings = {'rotors': "IV V Beta I",
+                'reflector': 'A',
+                'ring_settings': '18 24 3 5',
+                'initial_positions': 'E Z G P',
+                'plugboard_pairs': 'PC XZ FM QA ST NB HY OR EV IU'}
+    e = Enigma(settings)
+    e.encode('BUPXWJCDPFASXBDHLBBIBSRNWCSZXQOLBNXYAXVHOGCUUIBCVMPUZYUUKHI')
 
 
 

@@ -1,6 +1,7 @@
 from enigma import Enigma
 import itertools
 
+
 class CodeBreaker:
     def __init__(self, settings):
         self.settings = settings
@@ -14,30 +15,32 @@ class CodeBreaker:
 
     def codebreak1_reflector(self):
         self.name = 'codebreak1_reflector'
+        self.attempt = 1
         reflectors = ['A','B','C']
-        self.attempt = 0
+
         for reflector in reflectors:
-            self.attempt += 1
             self.settings['reflector'] = reflector
             self.enigma = Enigma(self.settings)
             self.enigma.create_machinery()
             self.encode_write_output()
 
+
     def codebreak2_positions(self):
         self.name = 'codebreak2_positions'
         positions = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-        self.attempt = 0
+        self.attempt = 1
         for position_combo in itertools.permutations(list(positions), 3):
-            self.attempt += 1
+
             combo_as_list = [i for i in position_combo]
             self.settings['initial_positions'] = ' '.join(combo_as_list)
             self.enigma = Enigma(self.settings)
             self.enigma.create_machinery()
             self.encode_write_output()
+            # self.attempt += 1
 
     def codebreak3_multi(self):
         self.name = 'codebreak3_multi'
-        self.attempt = 0
+        self.attempt = 1
         possible_rotors = ['Beta','Gamma','II','IV']
         possible_reflectors = ['A','B','C']
         allowed_digits = set('02468')
@@ -51,11 +54,13 @@ class CodeBreaker:
                     self.enigma = Enigma(self.settings)
                     self.enigma.create_machinery()
                     self.encode_write_output()
+                    # self.attempt += 1
+
 
     def codebreak4_plugleads(self):
         self.name = "codebreak4_plugleads"
 
-        self.attempt = 0
+        self.attempt = 1
         # Search through plugboard_pairs and remove from possible_plug
         possible_plugs = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
         for used_plug in self.settings['plugboard_pairs']:
@@ -75,20 +80,18 @@ class CodeBreaker:
             self.enigma = Enigma(self.settings)
             self.enigma.create_machinery()
             self.encode_write_output()
+            # self.attempt += 1
 
     def create_uniquepairssub(self,unique_pairs, two_pair):
         unique_pairs_sub = unique_pairs.copy()
         for i in two_pair:
-            try:
-                unique_pairs_sub.pop(unique_pairs_sub.index(i))
-            except:
-                import pdb
-                pdb.set_trace()
-                print("uh oh")
+            unique_pairs_sub.pop(unique_pairs_sub.index(i))
+
         return unique_pairs_sub
 
     def codebreak5_rewiring(self):
         self.name = "codebreak5_rewiring"
+        self.attempt = 1
         # For each reflector
         reflectors = ['A','B','C']
         self.enigma = Enigma(self.settings)
@@ -131,92 +134,41 @@ class CodeBreaker:
                                 rep_id = new_pins.index(value)
                                 new_contacts[rep_id] = key
 
-                        # rep_id = new_contacts.index(key)
-                        # new_pins[rep_id] = value
                             self.settings['reflector'] = reflector
                             self.enigma = Enigma(self.settings)
                             self.enigma.rotor_box[reflector]['contacts'] = ''.join(new_contacts)
                             self.enigma.create_machinery()
-                            self.attempt = 0
                             self.encode_write_output()
-                            self.attempt +=1
+                            # self.attempt +=1
 
     def encode_write_output(self):
         self.encoded_phrase = self.enigma.encode(self.code)
-        # Encode 'code'
         if isinstance(self.crib, list):
             for crib in self.crib:
                 if crib in self.encoded_phrase:
                     with open('codebreak.txt','a') as f:
-                        f.write(f"Codebreak task: {self.name}\n\n")
-                        f.write(f"Settings: \n")
-                        f.write(f"{str(self.settings)}\n\n")
-                        f.write(f"Input code : {self.code}\n")
-                        f.write(f"Crib: {self.crib}\n")
-                        f.write(f"Output code : {self.encoded_phrase}\n\n\n\n")
+                        self.write(f)
+                    self.attempt += 1
         else:
             if self.crib in self.encoded_phrase:
                 with open('codebreak.txt', 'a') as f:
-                    f.write(f"Codebreak task: {self.name}\n\n")
-                    f.write(f"Settings: \n")
-                    f.write(f"{str(self.settings)}\n\n")
-                    f.write(f"Input code : {self.code}\n")
-                    f.write(f"Crib: {self.crib}\n")
-                    f.write(f"Output code : {self.encoded_phrase}\n\n\n\n")
+                    self.write(f)
+                self.attempt+=1
 
-                    # f.write(f"Output code : {self.encoded_phrase}\n")
+    def write(self, f):
+        if self.attempt ==1:
+            f.write(f"#################################\n")
+            f.write(f"Codebreak task: {self.name}\n")
+            f.write(f"#################################\n\n")
 
+        f.write(f"Attempt : {self.attempt}\n")
+        f.write(f"SETTINGS: \n")
+        f.write(f"Rotors : {str(self.settings['rotors'])}\n")
+        f.write(f"Initial Positions : {str(self.settings['initial_positions'])}\n")
+        f.write(f"Ring Settings : {str(self.settings['ring_settings'])}\n")
+        f.write(f"Reflector : {str(self.settings['reflector'])}\n")
+        f.write(f"Plugboard Pairs : {str(self.settings['plugboard_pairs'])}\n\n")
+        f.write(f"Input code : {self.code}\n")
+        f.write(f"Crib: {self.crib}\n")
+        f.write(f"Output code : {self.encoded_phrase}\n\n\n\n")
 
-
-if __name__ == '__main__':
-    # CODE 1
-    # settings = {'code':'DMEXBMKYCVPNQBEDHXVPZGKMTFFBJRPJTLHLCHOTKOYXGGHZ',
-    #             'crib': 'SECRETS',
-    #             'rotors': 'Beta Gamma V',
-    #             'reflector': 'UNKNOWN',
-    #             'ring_settings': '04 02 14',
-    #             'initial_positions':'M J M',
-    #             'plugboard_pairs': 'KI XN FL'}
-    # e = CodeBreaker(settings)
-    # e.codebreak1_reflector()
-
-    # CODE 2
-    # settings = {'code':'CMFSUPKNCBMUYEQVVDYKLRQZTPUFHSWWAKTUGXMPAMYAFITXIJKMH',
-    #             'crib': 'UNIVERSITY',
-    #             'rotors': 'Beta I III',
-    #             'reflector': 'B',
-    #             'ring_settings': '23 02 10',
-    #             'initial_positions':'UNKNOWN',
-    #             'plugboard_pairs': 'VH PT ZG BJ EY FS'}
-    # e = CodeBreaker(settings)
-    # e.codebreak2_positions()
-    # CODE 3
-    # settings = {'code':'ABSKJAKKMRITTNYURBJFWQGRSGNNYJSDRYLAPQWIAGKJYEPCTAGDCTHLCDRZRFZHKNRSDLNPFPEBVESHPY',
-    #             'crib': 'THOUSANDS',
-    #             'rotors': 'UNKNOWN',
-    #             'reflector': 'UNKNOWN',
-    #             'ring_settings': 'UNKNOWN',
-    #             'initial_positions':'E M Y',
-    #             'plugboard_pairs': 'FH TS BE UQ KD AL'}
-    # e = CodeBreaker(settings)
-    # e.codebreak3_multi()
-    # CODE 4
-    # settings = {'code': 'SDNTVTPHRBNWTLMZTQKZGADDQYPFNHBPNHCQGBGMZPZLUAVGDQVYRBFYYEIXQWVTHXGNW',
-    #             'crib':'TUTOR',
-    #             'rotors':'V III IV',
-    #             'reflector':'A',
-    #             'ring_settings':'24 12 10',
-    #             'initial_positions':'S W U',
-    #             'plugboard_pairs': 'WP RJ A? VF I? HN CG BS'}
-    # e = CodeBreaker(settings)
-    # e.codebreak4_plugleads()
-    # CODE 5
-    settings = {'code': 'HWREISXLGTTBYVXRCWWJAKZDTVZWKBDJPVQYNEQIOTIFX',
-                'crib':['FACEBOOK','INSTAGRAM','TWITTER','SNAPCHAT','YOUTUBE','REDDIT','LINKEDIN'],
-                'rotors':'V II IV',
-                'reflector':'A',
-                'ring_settings':'6 18 7',
-                'initial_positions':'A J L',
-                'plugboard_pairs': 'UG IE PO NX WT'}
-    e = CodeBreaker(settings)
-    e.codebreak5_rewiring()

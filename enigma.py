@@ -22,7 +22,7 @@ class Rotor:
     def adjust_starting_positions(self):
         # Adjust for starting position (rotates both pin and contact rings)
         if self.name not in ['A','B','C']:
-            print(f"Adjusting starting positions for {self.name}")
+            # print(f"Adjusting starting positions for {self.name}")
             num_position_rotations = (string.ascii_uppercase.index('A') + string.ascii_uppercase.index(self.position)) % 26
             self.pins = self.rotate(self.pins, num_position_rotations)
             self.contacts = self.rotate(self.contacts, num_position_rotations)
@@ -113,15 +113,15 @@ class Rotor:
     def rotor_encode_left(self, input_index):
         self.output_char = self.contacts[input_index]
         self.output_index = self.pins.index(self.output_char)
-        print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
-              f"Pin is mapped internally to Contact {self.output_char}")
+        # print(f"Rotor {self.name}, Pin: {self.pins[input_index]}, "
+        #       f"Pin is mapped internally to Contact {self.output_char}")
 
     def rotor_encode_right(self, input_index):
         self.input_char = self.pins[input_index]
         self.output_index = self.contacts.index(self.input_char)
         self.output_char = self.pins[self.output_index]
-        print(f"Rotor {self.name}, Contact: {self.input_char}, "
-              f"Contact is mapped internally to Pin {self.output_char}")
+        # print(f"Rotor {self.name}, Contact: {self.input_char}, "
+        #       f"Contact is mapped internally to Pin {self.output_char}")
 
 
 class Enigma:
@@ -231,102 +231,3 @@ class Enigma:
         return ''.join(encoded_phrase)
 
 
-if __name__ == "__main__":
-    # You can use this section to write tests and demonstrations of your enigma code.
-    # MULTIPLE ROTOR DEMONSTRATION
-    # 1 A -> U
-    settings = {'rotors': "I II III",
-                'reflector': 'B',
-                'ring_settings': '1 1 1',
-                'initial_positions': 'A A Z',
-                'plugboard_pairs': None}
-    e = Enigma(settings)
-    e.create_machinery()
-    e.encode('A')
-    # 2 A -> B
-    # settings = {'rotors': "I II III",
-    #             'reflector': 'B',
-    #             'ring_settings': '1 1 1',
-    #             'initial_positions': 'A A A',
-    #             'plugboard_pairs': None}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('A')
-    # 3 A -> L - CORRECT
-    # settings = {'rotors': "I II III",
-    #             'reflector': 'B',
-    #             'ring_settings': '1 1 1',
-    #             'initial_positions': 'Q E V',
-    #             'plugboard_pairs': None}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('A')
-    # 4 H -> Y - CORRECT
-    # settings = {'rotors': "IV V Beta",
-    #             'reflector': 'B',
-    #             'ring_settings': '14 9 24',
-    #             'initial_positions': 'A A A',
-    #             'plugboard_pairs': None}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('H')
-
-    # e.encode('H')
-    # 5 Z -> V - CORRECT
-    # settings = {'rotors': "I II III IV",
-    #             'reflector': 'C',
-    #             'ring_settings': '7 11 15 19',
-    #             'initial_positions': 'Q E V Z',
-    #             'plugboard_pairs': None}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('Z')
-
-    #######################
-    ##### EXAMPLE 1 #######
-    #######################
-    # settings = {'rotors': "I II III", 'reflector': 'B',
-    #             'ring_settings': '1 1 1',
-    #             'initial_positions': 'A A Z',
-    #             'plugboard_pairs': 'HL MO AJ CX BZ SR NI YW DG PK'}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('HELLOWORLD')
-
-    #######################
-    ##### EXAMPLE 2 #######
-    #######################
-    # settings = {'rotors': "IV V Beta I",
-    #             'reflector': 'A',
-    #             'ring_settings': '18 24 3 5',
-    #             'initial_positions': 'E Z G P',
-    #             'plugboard_pairs': 'PC XZ FM QA ST NB HY OR EV IU'}
-    # e = Enigma(settings)
-    # e.create_machinery()
-    # e.encode('BUPXWJCDPFASXBDHLBBIBSRNWCSZXQOLBNXYAXVHOGCUUIBCVMPUZYUUKHI')
-
-
-
-
-
-    # Assert pluglead.mapping length == 2, "Cannot plug into more than one letter"
-    # Assert pluglead.mapping not a double i.e. "EE", "cannot physically connect a letter to itself as there is only one plugboard space per letter"
-    # Assert pluglead.mapping doesn't already exist in a different pluglead instance.
-
-# Notes
-"""
-Check that the ord(A) - ord(blah) works for long sentences, might fall over 
-"""
-"""
-Advanced Ideas
-- Removing limitation of being able to crack the code by allowing plugboard letter able to plug into itself (this was how Turing cracked the code)
-- Or able to plug a threeway lead with a random chance of 
-- Could add arg parsing to initiate advanced mode
-- use of decorators?
-- could ensure plugleads are not identical by defining __eq__ - it's more complicated but looks better
-- user interface ? ("How many leads? input :" "Please type X mappings") etc
-- Multiple inheritance for encode methods? (duplicated but might not be doing same thing)
-- Need to check if rotor has already been taken out of the box and used in the machine
--- Multiple plugboards? Have an enigma() parent class
-Could add plugboard and housing as part of abstract base class? (will always need to add these)
-"""

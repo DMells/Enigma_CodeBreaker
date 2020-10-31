@@ -1,4 +1,4 @@
-from plugboard import Plugboard
+from plugboard import PlugBoard
 import string
 
 class Rotor:
@@ -146,7 +146,7 @@ class Enigma:
 
     def create_machinery(self):
         # Add plugboard
-        self.board = Plugboard(self.settings)
+        self.board = PlugBoard(self.settings)
         # Add housing
         self.add("Housing")
         # Add rotors

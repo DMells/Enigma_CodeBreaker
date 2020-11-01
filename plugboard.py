@@ -6,7 +6,7 @@ class Plugboard:
     Finally, creates an object which is bolted onto the front of the enigma system, which will map the 'typed' character
     to it's respective plugboard character, before passing the signal through to the housing and then rotors.
     """
-    def __init__(self, settings=None, pairs=None):
+    def __init__(self, settings:dict = None, pairs:str = None):
         self.unusedplugleads = 10
         self.plugleads = []
         self.pairs = pairs
@@ -22,7 +22,7 @@ class Plugboard:
         for i in self.pairs.split(' '):
             self.add(PlugLead(i))
 
-    def add(self, pluglead):
+    def add(self, pluglead:object):
         """
         Add instance of PlugLead to the Plugboard (via plugleads list)
         1. Checks first if there are any unused plugleads
@@ -40,7 +40,7 @@ class Plugboard:
         else:
             raise ValueError("Lead creation exceeds max number of leads")
 
-    def encode(self, character):
+    def encode(self, character:str) -> str:
         """
         For the input character, loop through all instances of plugleads and find which one contains that character
         Return encoded character
@@ -62,12 +62,12 @@ class Plugboard:
             return encoded_char
 
 class PlugLead:
-    def __init__(self, mapping):
+    def __init__(self, mapping:str):
         self.mapping = mapping
         assert len(mapping) == 2, "Must be plugged into two letters"
         assert mapping[0] != mapping[1], "Cannot physically plug two identical letters"
 
-    def encode(self, character):
+    def encode(self, character:str) -> str:
         """
         Convert input character to it's associated encoded character via the plugboard
         input character : the character we want to encode

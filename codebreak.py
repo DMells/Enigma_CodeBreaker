@@ -7,7 +7,7 @@ class CodeBreaker:
     Contains separate functions to run each of the codebreaker tasks, as well as a writer function to output results
     to a text file
     """
-    def __init__(self, settings):
+    def __init__(self, settings:dict):
         self.settings = settings
         self.code = settings['code']
         self.crib = settings['crib']
@@ -193,7 +193,7 @@ class CodeBreaker:
         # Run code through enigma using derived settings
         self.encoded_phrase = self.enigma.encode(self.code)
 
-        # If there are multiple inputs in the crib, iterate over them before checking through the encoded phrase
+        # If there are multiple inputs in the crib, iterate over them before checking through the encoded message
         if isinstance(self.crib, list):
             for crib in self.crib:
                 if crib in self.encoded_phrase:

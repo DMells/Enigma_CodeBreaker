@@ -75,11 +75,6 @@ if __name__ == "__main__":
         e.encode(args.code)
 
 
-
-    # Assert pluglead.mapping length == 2, "Cannot plug into more than one letter"
-    # Assert pluglead.mapping not a double i.e. "EE", "cannot physically connect a letter to itself as there is only one plugboard space per letter"
-    # Assert pluglead.mapping doesn't already exist in a different pluglead instance.
-
 # Notes
 
 """

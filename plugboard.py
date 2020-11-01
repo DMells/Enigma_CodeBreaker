@@ -1,4 +1,4 @@
-class PlugBoard:
+class Plugboard:
     """
     The main class for the plugboard system. Is automatically constructed if 'plugboard_pairs' contains any entries.
     Each pair of characters in plugboard_pairs will create a PlugLead instance, which maps the characters (plugs) to each
@@ -6,10 +6,12 @@ class PlugBoard:
     Finally, creates an object which is bolted onto the front of the enigma system, which will map the 'typed' character
     to it's respective plugboard character, before passing the signal through to the housing and then rotors.
     """
-    def __init__(self, settings):
+    def __init__(self, settings=None, pairs=None):
         self.unusedplugleads = 10
         self.plugleads = []
-        self.pairs = settings['plugboard_pairs']
+        self.pairs = pairs
+        if settings:
+            self.pairs = settings['plugboard_pairs']
 
         # If plugboard_pairs exists as a string, create the plugboard
         if self.pairs:
@@ -22,7 +24,7 @@ class PlugBoard:
 
     def add(self, pluglead):
         """
-        Add instance of PlugLead to the PlugBoard (via plugleads list)
+        Add instance of PlugLead to the Plugboard (via plugleads list)
         1. Checks first if there are any unused plugleads
         2. Checks if any of the letters in the input string are already contained within
         another instance of PlugLead - if so returns ValueError

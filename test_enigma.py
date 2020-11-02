@@ -1,4 +1,3 @@
-# from unittest import *
 import pytest
 from enigma import *
 from plugboard import *

@@ -1,9 +1,13 @@
 from enigma import Enigma
-import demonstrations, codebreak, codebreaker_tasks
+import demonstrations, codebreaker_tasks
 import argparse
 
 
 def get_args():
+    """
+    Obtain arguments as specified by the user input and parse them
+    return args: parsed arguments
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--rotor_demo', default=None, action='store_true',
                         help='Run rotor demonstration tasks')
@@ -37,17 +41,15 @@ def get_args():
     if not ((args.rotor_demo or args.machine_demo) or args.codebreaker):
         assert len(args.rotors.split()) == len(args.ring_settings.split()) == len(args.initial_positions.split()), \
             'Ensure rotors, ring settings and initial positions all have the same counts.'
-
-        assert args.code, \
-            'Manual mode: please use --code (str).'
+        assert len(args.rotors.split(' ')) <= 4, 'Too many rotors added, choose 3 or 4'
+        assert len(args.rotors.split(' ')) >= 3, 'Too few rotors added, choose 3 or 4'
+        assert args.code, 'Manual mode: please use --code (str).'
 
     if args.plugboard_pairs:
-        assert len(args.plugboard_pairs) <= 30, \
-            'Too many plugboard pairs used, maximum is 10.'
+        assert len(args.plugboard_pairs) <= 30, 'Too many plugboard pairs used, maximum is 10.'
 
     if args.code:
-        assert not (' ' in args.code), \
-            '--code contains a space. Enigma is not compatible with spaces, please correct.'
+        assert not (' ' in args.code), '--code contains a space. Enigma is not compatible with spaces, please correct.'
 
     return args
 
@@ -73,20 +75,3 @@ if __name__ == "__main__":
         e = Enigma(settings)
         e.create_machinery()
         e.encode(args.code)
-
-
-# Notes
-
-"""
-Advanced Ideas
-- Removing limitation of being able to crack the code by allowing plugboard letter able to plug into itself (this was how Turing cracked the code)
-- Or able to plug a threeway lead with a random chance of 
-- Could add arg parsing to initiate advanced mode
-- use of decorators?
-- could ensure plugleads are not identical by defining __eq__ - it's more complicated but looks better
-- user interface ? ("How many leads? input :" "Please type X mappings") etc
-- Multiple inheritance for encode methods? (duplicated but might not be doing same thing)
-- Need to check if rotor has already been taken out of the box and used in the machine
--- Multiple plugboards? Have an enigma() parent class
-Could add plugboard and housing as part of abstract base class? (will always need to add these)
-"""

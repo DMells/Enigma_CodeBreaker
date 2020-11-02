@@ -260,6 +260,7 @@ class Rotor(Enigma):
 
     def rotor_encode_right(self, input_index: int = 0):
         """Passes the signal rightwards (contact->pin) through the current machine part"""
+
         self.input_char = self.pins[input_index]
         self.output_index = self.contacts.index(self.input_char)
         self.output_char = self.pins[self.output_index]

@@ -7,7 +7,7 @@ The project is split into two parts:
 
 <i>The actual assignment is detailed in `enigma.ipynb` if you wish to replicate.</i>
 
-##How it works
+## How it works
 The machine itself is broken into several key concepts:
 - A plugboard, where a letter is directly mapped to another. Functionality includes adding user-defined plugleads to the plugboard
 - The rotors - there is a choice of 7 rotors, each containing a set of "pins" and "contacts" used to map one letter to another. The rotors are designed to rotate upon each key press, and the initial configuration of the rotor consists of the starting position of the rotor itself and the internal mappings for the letters.
